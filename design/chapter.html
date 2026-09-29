@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Crowding — Psychophysics for Vision-Language Models</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<main>
+  <div class="chapter-head">
+    <a class="back" href="index.html"><span class="fix"><span class="dot"></span></span>Psychophysics for Vision-Language Models</a>
+    <div class="chapter-number">Chapter 1</div>
+    <h1 class="chapter-title">Crowding</h1>
+    <p class="chapter-sub">A letter you can read on its own becomes unreadable when other letters sit close to it. Does a vision-language model crowd?</p>
+    <div class="view-switch" data-view="article" role="group" aria-label="View">
+      <span class="thumb"></span>
+      <button type="button" data-view="article" aria-pressed="true">Article</button>
+      <button type="button" data-view="notebook" aria-pressed="false">Notebook</button>
+    </div>
+  </div>
+
+  <div class="chapter-layout">
+    <nav class="toc" aria-label="Parts">
+      <ol>
+        <li><a href="#" data-section="classic">The classic experiment</a></li>
+        <li><a href="#" data-section="human">Human results</a></li>
+        <li><a href="#" data-section="vlm">Doing it with a VLM</a></li>
+        <li><a href="#" data-section="model">What the model did</a></li>
+        <li><a href="#" data-section="compare">Model versus humans</a></li>
+        <li><a href="#" data-section="meaning">What it means</a></li>
+      </ol>
+    </nav>
+
+    <div class="stage">
+
+      <!-- ================= ARTICLE ================= -->
+      <article class="face article" id="article">
+
+        <section data-section="classic">
+          <h2><span class="part">01</span>The classic experiment</h2>
+          <p>Placeholder text. An observer keeps their eyes on a fixation cross. A target letter appears
+            some distance to the side, with a letter on each side of it, and the observer names the
+            target. The experimenter varies how far the flankers are from the target.</p>
+          <figure>
+            <div class="display">
+              <div class="display-row three">
+                <div class="tile"><img src="img/crowd_original.png" alt=""><span>flanked</span></div>
+                <div class="tile"><div class="empty">wide spacing<br>(figure)</div></div>
+                <div class="tile"><div class="empty">alone<br>(figure)</div></div>
+              </div>
+            </div>
+            <figcaption><b>Figure 1.</b> A crowding display: fixation on the left, target in the middle of three letters. Placeholder caption.</figcaption>
+          </figure>
+          <p>Placeholder text about the task and why the flankers matter, with a citation in the
+            text <span class="cite">(Bouma, 1970)</span>.</p>
+        </section>
+
+        <section data-section="human">
+          <h2><span class="part">02</span>Human results</h2>
+          <p>Placeholder text. Flankers hurt when they are closer than about half the eccentricity:
+            Bouma's law. The critical spacing grows in a straight line with distance from fixation.</p>
+          <figure>
+            <div class="plot">
+              <svg viewBox="0 0 520 260" role="img" aria-label="Placeholder plot of critical spacing against eccentricity">
+                <g font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor">
+                  <line x1="60" y1="220" x2="500" y2="220" stroke="currentColor" opacity="0.5"/>
+                  <line x1="60" y1="220" x2="60" y2="20"  stroke="currentColor" opacity="0.5"/>
+                  <text x="280" y="250" text-anchor="middle">eccentricity (deg)</text>
+                  <text x="20" y="120" text-anchor="middle" transform="rotate(-90 20 120)">critical spacing (deg)</text>
+                  <line x1="60" y1="220" x2="480" y2="40" stroke="#c8102e" stroke-width="3"/>
+                  <text x="440" y="36" fill="#c8102e">0.5 × ecc</text>
+                  <g opacity="0.8"><circle cx="130" cy="186" r="5"/><circle cx="210" cy="152" r="5"/><circle cx="290" cy="122" r="5"/><circle cx="370" cy="84" r="5"/></g>
+                  <text x="300" y="200" opacity="0.6">placeholder data</text>
+                </g>
+              </svg>
+            </div>
+            <figcaption><b>Figure 2.</b> Critical spacing against eccentricity. Human data will be redrawn from the papers, with sources.</figcaption>
+          </figure>
+        </section>
+
+        <section data-section="vlm">
+          <h2><span class="part">03</span>Doing it with a VLM</h2>
+          <p>Placeholder text. A model has no fixation and no periphery: it sees every part of the image
+            at the same resolution. So we give it one, in two ways: blur that grows with eccentricity,
+            and texture pooling (NeuroFovea). A third version passes the image through NeuroFovea's
+            decoder without pooling, as a control.</p>
+          <figure>
+            <div class="display">
+              <div class="display-row">
+                <div class="tile"><img src="img/crowd_original.png" alt=""><span>original</span></div>
+                <div class="tile"><img src="img/crowd_blur.png" alt=""><span>blur</span></div>
+                <div class="tile"><img src="img/crowd_reference.png" alt=""><span>reference</span></div>
+                <div class="tile"><img src="img/crowd_metamer.png" alt=""><span>metamer</span></div>
+              </div>
+            </div>
+            <figcaption><b>Figure 3.</b> The same display in the four versions the model sees. Target "D" at 5°, flankers 1.4° away.</figcaption>
+          </figure>
+          <figure>
+            <div class="display">
+              <div class="display-row three">
+                <div class="tile"><img src="img/photo_original.jpg" alt=""><span>original</span></div>
+                <div class="tile"><img src="img/photo_blur.jpg" alt=""><span>blur</span></div>
+                <div class="tile"><img src="img/photo_reference.jpg" alt=""><span>reference</span></div>
+              </div>
+            </div>
+            <figcaption><b>Figure 4.</b> A real photo with the target, a running boy, 8° from the centre.</figcaption>
+          </figure>
+          <p>Placeholder text on the question asked: "which letter is in the middle?", scored over
+            the ten Sloan letters from one forward pass.</p>
+        </section>
+
+        <section data-section="model">
+          <h2><span class="part">04</span>What the model did</h2>
+          <p class="pending">Results in progress: the metamers and experiments run next.</p>
+        </section>
+
+        <section data-section="compare">
+          <h2><span class="part">05</span>Model versus humans</h2>
+          <p class="pending">Comparison in progress.</p>
+        </section>
+
+        <section data-section="meaning">
+          <h2><span class="part">06</span>What it means</h2>
+          <p>Placeholder conclusions and references.</p>
+          <p class="cite">Bouma, H. (1970). Interaction effects in parafoveal letter recognition. <i>Nature</i>, 226, 177–178.<br>
+            Deza, A., Jonnalagadda, A., &amp; Eckstein, M. P. (2019). Towards metamerism via foveated style transfer. <i>ICLR</i>.</p>
+        </section>
+      </article>
+
+      <!-- ================= NOTEBOOK ================= -->
+      <div class="face notebook" id="notebook" hidden>
+
+        <section data-section="vlm">
+          <div class="nb-part">03 · Doing it with a VLM</div>
+
+          <div class="cell md"><div class="prompt"></div><div class="body">
+            <h3>The drawing function</h3>
+            <p><code>eccentricity</code> is the distance from the fixation cross to the target; <code>spacing</code> is the distance from the target to each flanker. Both are in degrees.</p>
+          </div></div>
+
+          <div class="cell"><div class="prompt">[7]</div><div class="body">
+<pre><span class="tok-k">def</span> drawCrowdingDisplay(target, leftFlanker, rightFlanker, eccentricity, spacing):
+  img  = Image.new(<span class="tok-s">"RGB"</span>, (imageSize, imageSize), <span class="tok-s">"white"</span>)
+  draw = ImageDraw.Draw(img)
+  font = ImageFont.truetype(fontPath, letterSize)
+
+  <span class="tok-c"># fixation cross in the centre</span>
+  draw.line((centre - <span class="tok-n">8</span>, centre, centre + <span class="tok-n">8</span>, centre), fill=<span class="tok-s">"black"</span>, width=<span class="tok-n">2</span>)
+  draw.line((centre, centre - <span class="tok-n">8</span>, centre, centre + <span class="tok-n">8</span>), fill=<span class="tok-s">"black"</span>, width=<span class="tok-n">2</span>)
+
+  <span class="tok-c"># target to the right of the cross</span>
+  targetX = centre + eccentricity * pixelsPerDegree
+  draw.text((targetX, centre), target, fill=<span class="tok-s">"black"</span>, font=font, anchor=<span class="tok-s">"mm"</span>)
+  ...</pre>
+            <div class="out"><img src="img/crowd_original.png" alt=""></div>
+          </div></div>
+
+          <div class="cell"><div class="prompt">[24]</div><div class="body">
+<pre>metamerLetters = neuroFovea(exampleLetters, seed=<span class="tok-n">0</span>)
+print(<span class="tok-s">"one metamer: %.1f s"</span> % (time.time() - startTime))</pre>
+            <div class="out">one metamer: 2.8 s</div>
+            <div class="out"><img src="img/crowd_metamer.png" alt=""></div>
+          </div></div>
+        </section>
+
+        <section data-section="model">
+          <div class="nb-part">04 · What the model did</div>
+          <div class="cell"><div class="prompt">[ ]</div><div class="body">
+<pre>letterResults = {}
+<span class="tok-k">for</span> version <span class="tok-k">in</span> versions:
+  <span class="tok-k">for</span> trial <span class="tok-k">in</span> letterTrials:
+    probs  = sloanProbs(img)
+    answer = sloanLetters[np.argmax(probs)]</pre>
+            <div class="out">not run yet</div>
+          </div></div>
+        </section>
+
+        <section data-section="compare">
+          <div class="nb-part">05 · Model versus humans</div>
+          <div class="cell md"><div class="prompt"></div><div class="body"><p>Not run yet.</p></div></div>
+        </section>
+
+        <section data-section="meaning">
+          <div class="nb-part">06 · What it means</div>
+          <div class="cell md"><div class="prompt"></div><div class="body"><p>Exercises from the notebook go here.</p></div></div>
+        </section>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <span>Doğukan Nami Öztaş</span>
+  <span>Code and data on GitHub</span>
+</footer>
+
+<script src="site.js"></script>
+</body>
+</html>
