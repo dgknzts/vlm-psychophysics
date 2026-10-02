@@ -1,0 +1,28 @@
+<svg viewBox="0 0 800 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Left: the stimulus screen, a fixation cross with the letters x k x to its right. Right: the observer says the middle letter aloud.">
+  <rect width="800" height="280" fill="#7f7f7f"/>
+
+  <!-- two white screens -->
+  <rect x="30"  y="40" width="350" height="200" fill="#ffffff"/>
+  <rect x="420" y="40" width="350" height="200" fill="#ffffff"/>
+
+  <g font-family="IBM Plex Mono, monospace" font-size="12" fill="#f2f2f2" letter-spacing="1">
+    <text x="30"  y="28">STIMULUS · 200 MS</text>
+    <text x="420" y="28">RESPONSE · SPOKEN</text>
+  </g>
+
+  <!-- fixation crosses in the middle of each screen -->
+  <g stroke="#000" stroke-width="2">
+    <line x1="197" y1="140" x2="213" y2="140"/><line x1="205" y1="132" x2="205" y2="148"/>
+    <line x1="587" y1="140" x2="603" y2="140"/><line x1="595" y1="132" x2="595" y2="148"/>
+  </g>
+
+  <!-- Bouma (1970): a lowercase Courier letter flanked by x on both sides, left or right of fixation -->
+  <g font-family="Courier New, Courier, monospace" font-size="26" fill="#000" text-anchor="middle" dominant-baseline="central">
+    <text x="276" y="138">x</text><text x="300" y="138">k</text><text x="324" y="138">x</text>
+  </g>
+
+  <!-- Bouma (1970): the observer names the letter aloud; the experimenter writes it down -->
+  <g font-family="IBM Plex Sans, sans-serif" font-size="16" fill="#000" text-anchor="middle">
+    <text x="595" y="90">"k"</text>
+  </g>
+</svg>

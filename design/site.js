@@ -48,6 +48,7 @@
   var faces      = { article: document.getElementById("article"), notebook: document.getElementById("notebook") };
   var tocLinks   = document.querySelectorAll(".toc a");
   var busy       = false;
+  var savedScroll = {};   // scroll position of each view when we left it
 
   function currentView() {
     return viewSwitch ? viewSwitch.getAttribute("data-view") : "article";
@@ -70,6 +71,7 @@
     var from    = faces[currentView()];
     var to      = faces[name];
     var section = sectionInView(from);
+    savedScroll[currentView()] = window.scrollY;   // remember where we left this view
 
     function swap() {
       from.hidden = true;
@@ -81,10 +83,15 @@
         buttons[i].setAttribute("aria-pressed", buttons[i].getAttribute("data-view") === name ? "true" : "false");
       }
 
-      // land on the same section; the notebook has no parts 1-2, so fall back to part 3
-      var target = section ? to.querySelector('section[data-section="' + section + '"]') : null;
-      if (!target && section) target = to.querySelector("section[data-section]");
-      if (target) target.scrollIntoView({ behavior: "instant", block: "start" });
+      // coming back to a view we were already reading: return to the same place
+      if (savedScroll[name] !== undefined) {
+        window.scrollTo({ top: savedScroll[name], behavior: "instant" });
+      } else {
+        // first visit: land on the same section; the notebook has no parts 1-2, so fall back to part 3
+        var target = section ? to.querySelector('section[data-section="' + section + '"]') : null;
+        if (!target && section) target = to.querySelector("section[data-section]");
+        if (target) target.scrollIntoView({ behavior: "instant", block: "start" });
+      }
 
       if (animate) {
         to.classList.add("flip-in");

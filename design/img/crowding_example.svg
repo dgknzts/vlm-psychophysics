@@ -1,0 +1,12 @@
+<svg viewBox="0 0 800 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A fixation cross in the middle; an isolated N on its left and the same N between D and O on its right, at the same distance.">
+  <rect width="800" height="240" fill="#ffffff"/>
+  <!-- fixation cross in the middle -->
+  <g stroke="#000" stroke-width="3">
+    <line x1="390" y1="120" x2="410" y2="120"/><line x1="400" y1="110" x2="400" y2="130"/>
+  </g>
+  <!-- the same target N, 280 px left and right of fixation; flankers 40 px away -->
+  <g font-family="Helvetica, Arial, sans-serif" font-weight="700" font-size="34" fill="#000" text-anchor="middle" dominant-baseline="central">
+    <text x="120" y="120">N</text>
+    <text x="640" y="120">D</text><text x="680" y="120">N</text><text x="720" y="120">O</text>
+  </g>
+</svg>

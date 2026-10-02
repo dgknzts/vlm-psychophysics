@@ -165,20 +165,20 @@ a.plate:hover h3 { text-decoration: underline; text-decoration-color: var(--acce
 /* ---------- chapter page ---------- */
 
 .back {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
+  display: inline-block;
   font-family: var(--sans);
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: 2rem;
+  line-height: 1;
   text-decoration: none;
+  color: var(--ink-soft);
 }
-.back:hover { color: var(--ink-soft); }
+.back:hover { color: var(--ink); }
 
+/* one centred column: header and article share the same width */
 .chapter-head {
-  max-width: 64rem;
+  max-width: 51rem;
   margin: 0 auto;
-  padding: 1.5rem 1.5rem 1.5rem;
+  padding: 1rem 1.5rem 0.5rem;
 }
 .chapter-number {
   font-family: var(--mono);
@@ -193,7 +193,7 @@ a.plate:hover h3 { text-decoration: underline; text-decoration-color: var(--acce
   font-weight: 600;
   font-size: clamp(2.2rem, 5vw, 3.4rem);
   line-height: 1.08;
-  margin: 0.5rem 0 0.8rem;
+  margin: 0.8rem 0 0.4rem;
   letter-spacing: -0.02em;
 }
 .chapter-sub { font-size: 1.2rem; color: var(--ink-soft); max-width: 40rem; margin: 0; }
@@ -234,12 +234,9 @@ a.plate:hover h3 { text-decoration: underline; text-decoration-color: var(--acce
 .view-switch[data-view="notebook"] .thumb { transform: translateX(100%); }
 
 .chapter-layout {
-  max-width: 64rem;
+  max-width: 51rem;
   margin: 0 auto;
-  padding: 1rem 1.5rem 6rem;
-  display: grid;
-  grid-template-columns: 12rem minmax(0, 1fr);
-  gap: 3rem;
+  padding: 0 1.5rem 6rem;
 }
 
 /* table of contents: the six parts */
@@ -278,20 +275,32 @@ a.plate:hover h3 { text-decoration: underline; text-decoration-color: var(--acce
 }
 
 /* article typography */
-.article { max-width: var(--measure); }
-.article section { scroll-margin-top: 2rem; padding-bottom: 1rem; }
+.article { max-width: none; }
+.article section { scroll-margin-top: 2rem; padding-bottom: 0; }
 .article h2 {
   font-family: var(--sans);
   font-weight: 600;
   font-size: 1.6rem;
   line-height: 1.2;
-  margin: 3rem 0 1rem;
+  margin: 1.8rem 0 1rem;
   display: flex;
   align-items: baseline;
   gap: 0.8rem;
 }
 .article h2 .part { font-family: var(--mono); font-size: 0.85rem; color: var(--accent); font-weight: 500; }
 .article p { margin: 0 0 1.2rem; }
+.article .big-title {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 2.2rem;
+  line-height: 1.15;
+  margin: 2.2rem 0 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule);
+}
+.article h3 { font-family: var(--sans); font-weight: 600; font-size: 1.15rem; margin: 2.2rem 0 0.7rem; }
+.article ol { margin: 0 0 1.2rem; padding-left: 1.4rem; }
+.article li { margin-bottom: 0.4rem; }
 .article .pending {
   font-family: var(--mono);
   font-size: 0.85rem;
@@ -338,7 +347,7 @@ figure { margin: 2rem 0; }
 }
 figcaption {
   font-family: var(--sans);
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   color: var(--ink-soft);
   margin-top: 0.7rem;
   line-height: 1.5;
@@ -346,6 +355,21 @@ figcaption {
 figcaption b { color: var(--ink); font-weight: 600; }
 
 .plot { background: var(--paper-2); border-radius: 3px; padding: 1rem; }
+
+/* full-width drawings and playable figures: the svg carries its own grey */
+.drawing svg { display: block; width: 100%; height: auto; border-radius: 3px; }
+.demo-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.7rem;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+.demo-controls input[type="range"] { flex: 1; accent-color: var(--accent); }
+.display-row.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.display-row.one { grid-template-columns: minmax(0, 26rem); justify-content: center; }
 .plot svg { width: 100%; height: auto; }
 
 /* ---------- notebook view ---------- */
@@ -416,8 +440,7 @@ figcaption b { color: var(--ink); font-weight: 600; }
   .chapters { padding: 0.5rem 1rem 4rem; }
   .gallery { grid-template-columns: minmax(0, 1fr); gap: 2rem; }
   .chapter-head { padding: 1.2rem 1rem 1rem; }
-  .chapter-number { margin-top: 2.5rem; }
-  .chapter-layout { grid-template-columns: minmax(0, 1fr); padding: 0.5rem 1rem 4rem; gap: 1rem; }
+  .chapter-layout { padding: 0 1rem 4rem; }
   .toc {
     position: static;
     overflow-x: auto;

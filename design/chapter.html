@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- Made by build.py from chapters/crowding.md. Edit that file, not this one. -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -13,10 +14,8 @@
 
 <main>
   <div class="chapter-head">
-    <a class="back" href="index.html"><span class="fix"><span class="dot"></span></span>Psychophysics for Vision-Language Models</a>
-    <div class="chapter-number">Chapter 1</div>
+    <a class="back" href="index.html" aria-label="Back to all chapters">&lsaquo;</a>
     <h1 class="chapter-title">Crowding</h1>
-    <p class="chapter-sub">A letter you can read on its own becomes unreadable when other letters sit close to it. Does a vision-language model crowd?</p>
     <div class="view-switch" data-view="article" role="group" aria-label="View">
       <span class="thumb"></span>
       <button type="button" data-view="article" aria-pressed="true">Article</button>
@@ -25,111 +24,116 @@
   </div>
 
   <div class="chapter-layout">
-    <nav class="toc" aria-label="Parts">
-      <ol>
-        <li><a href="#" data-section="classic">The classic experiment</a></li>
-        <li><a href="#" data-section="human">Human results</a></li>
-        <li><a href="#" data-section="vlm">Doing it with a VLM</a></li>
-        <li><a href="#" data-section="model">What the model did</a></li>
-        <li><a href="#" data-section="compare">Model versus humans</a></li>
-        <li><a href="#" data-section="meaning">What it means</a></li>
-      </ol>
-    </nav>
-
     <div class="stage">
 
       <!-- ================= ARTICLE ================= -->
       <article class="face article" id="article">
+<div class="intro">
+<h3>What we will do here</h3>
+<ol>
+<li>What crowding is, and Bouma's simple spacing rule for it.</li>
+<li>The original experiment: Bouma <span class="cite">(1970)</span> and his data.</li>
+<li>Crowding in vision-language models: what we want to find out.</li>
+</ol>
+<h3>What is crowding?</h3>
+<p>An object (target) you can read when its isolated becomes very difficult to discriminate when surrounded by neighboring objects (flankers).</p>
+<figure>
+<div class="drawing">
+<svg viewBox="0 0 800 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A fixation cross in the middle; an isolated N on its left and the same N between D and O on its right, at the same distance.">
+  <rect width="800" height="240" fill="#ffffff"/>
+  <!-- fixation cross in the middle -->
+  <g stroke="#000" stroke-width="3">
+    <line x1="390" y1="120" x2="410" y2="120"/><line x1="400" y1="110" x2="400" y2="130"/>
+  </g>
+  <!-- the same target N, 280 px left and right of fixation; flankers 40 px away -->
+  <g font-family="Helvetica, Arial, sans-serif" font-weight="700" font-size="34" fill="#000" text-anchor="middle" dominant-baseline="central">
+    <text x="120" y="120">N</text>
+    <text x="640" y="120">D</text><text x="680" y="120">N</text><text x="720" y="120">O</text>
+  </g>
+</svg>
+</div>
+<figcaption><b>Figure 1.</b> Look at the cross. The N on the left is easy to name; the same N on the right, at the same distance, is lost between D and O.</figcaption>
+</figure>
+</div>
 
-        <section data-section="classic">
-          <h2><span class="part">01</span>The classic experiment</h2>
-          <p>Placeholder text. An observer keeps their eyes on a fixation cross. A target letter appears
-            some distance to the side, with a letter on each side of it, and the observer names the
-            target. The experimenter varies how far the flankers are from the target.</p>
-          <figure>
-            <div class="display">
-              <div class="display-row three">
-                <div class="tile"><img src="img/crowd_original.png" alt=""><span>flanked</span></div>
-                <div class="tile"><div class="empty">wide spacing<br>(figure)</div></div>
-                <div class="tile"><div class="empty">alone<br>(figure)</div></div>
-              </div>
-            </div>
-            <figcaption><b>Figure 1.</b> A crowding display: fixation on the left, target in the middle of three letters. Placeholder caption.</figcaption>
-          </figure>
-          <p>Placeholder text about the task and why the flankers matter, with a citation in the
-            text <span class="cite">(Bouma, 1970)</span>.</p>
-        </section>
+<section data-section="classic">
+<h2>A surprisingly simple spacing rule: Bouma&#x27;s window</h2>
+<p>Flankers hurt when they are closer than about half the eccentricity: Bouma's law. The critical spacing grows in a straight line with distance from fixation.</p>
+<figure>
+<div class="drawing" data-demo="bouma"></div>
+<figcaption><b>Figure 2.</b> Keep your eyes on the cross and move the slider. With the flankers close, the middle letter is hard to name; past about half the eccentricity (Bouma's window), it becomes easy. Click the image for new letters.</figcaption>
+</figure>
+</section>
 
-        <section data-section="human">
-          <h2><span class="part">02</span>Human results</h2>
-          <p>Placeholder text. Flankers hurt when they are closer than about half the eccentricity:
-            Bouma's law. The critical spacing grows in a straight line with distance from fixation.</p>
-          <figure>
-            <div class="plot">
-              <svg viewBox="0 0 520 260" role="img" aria-label="Placeholder plot of critical spacing against eccentricity">
-                <g font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor">
-                  <line x1="60" y1="220" x2="500" y2="220" stroke="currentColor" opacity="0.5"/>
-                  <line x1="60" y1="220" x2="60" y2="20"  stroke="currentColor" opacity="0.5"/>
-                  <text x="280" y="250" text-anchor="middle">eccentricity (deg)</text>
-                  <text x="20" y="120" text-anchor="middle" transform="rotate(-90 20 120)">critical spacing (deg)</text>
-                  <line x1="60" y1="220" x2="480" y2="40" stroke="#c8102e" stroke-width="3"/>
-                  <text x="440" y="36" fill="#c8102e">0.5 × ecc</text>
-                  <g opacity="0.8"><circle cx="130" cy="186" r="5"/><circle cx="210" cy="152" r="5"/><circle cx="290" cy="122" r="5"/><circle cx="370" cy="84" r="5"/></g>
-                  <text x="300" y="200" opacity="0.6">placeholder data</text>
-                </g>
-              </svg>
-            </div>
-            <figcaption><b>Figure 2.</b> Critical spacing against eccentricity. Human data will be redrawn from the papers, with sources.</figcaption>
-          </figure>
-        </section>
+<section data-section="human">
+<h2>The original experiment: Bouma (1970)</h2>
+<p>Here we use Bouma's own data from 1970, refitted with modern psychometric functions by Coates and colleagues <span class="cite">(2021)</span>.</p>
+<h3>Stimuli and the task</h3>
+<figure>
+<div class="drawing">
+<svg viewBox="0 0 800 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Left: the stimulus screen, a fixation cross with the letters x k x to its right. Right: the observer says the middle letter aloud.">
+  <rect width="800" height="280" fill="#7f7f7f"/>
 
-        <section data-section="vlm">
-          <h2><span class="part">03</span>Doing it with a VLM</h2>
-          <p>Placeholder text. A model has no fixation and no periphery: it sees every part of the image
-            at the same resolution. So we give it one, in two ways: blur that grows with eccentricity,
-            and texture pooling (NeuroFovea). A third version passes the image through NeuroFovea's
-            decoder without pooling, as a control.</p>
-          <figure>
-            <div class="display">
-              <div class="display-row">
-                <div class="tile"><img src="img/crowd_original.png" alt=""><span>original</span></div>
-                <div class="tile"><img src="img/crowd_blur.png" alt=""><span>blur</span></div>
-                <div class="tile"><img src="img/crowd_reference.png" alt=""><span>reference</span></div>
-                <div class="tile"><img src="img/crowd_metamer.png" alt=""><span>metamer</span></div>
-              </div>
-            </div>
-            <figcaption><b>Figure 3.</b> The same display in the four versions the model sees. Target "D" at 5°, flankers 1.4° away.</figcaption>
-          </figure>
-          <figure>
-            <div class="display">
-              <div class="display-row three">
-                <div class="tile"><img src="img/photo_original.jpg" alt=""><span>original</span></div>
-                <div class="tile"><img src="img/photo_blur.jpg" alt=""><span>blur</span></div>
-                <div class="tile"><img src="img/photo_reference.jpg" alt=""><span>reference</span></div>
-              </div>
-            </div>
-            <figcaption><b>Figure 4.</b> A real photo with the target, a running boy, 8° from the centre.</figcaption>
-          </figure>
-          <p>Placeholder text on the question asked: "which letter is in the middle?", scored over
-            the ten Sloan letters from one forward pass.</p>
-        </section>
+  <!-- two white screens -->
+  <rect x="30"  y="40" width="350" height="200" fill="#ffffff"/>
+  <rect x="420" y="40" width="350" height="200" fill="#ffffff"/>
 
-        <section data-section="model">
-          <h2><span class="part">04</span>What the model did</h2>
-          <p class="pending">Results in progress: the metamers and experiments run next.</p>
-        </section>
+  <g font-family="IBM Plex Mono, monospace" font-size="12" fill="#f2f2f2" letter-spacing="1">
+    <text x="30"  y="28">STIMULUS · 200 MS</text>
+    <text x="420" y="28">RESPONSE · SPOKEN</text>
+  </g>
 
-        <section data-section="compare">
-          <h2><span class="part">05</span>Model versus humans</h2>
-          <p class="pending">Comparison in progress.</p>
-        </section>
+  <!-- fixation crosses in the middle of each screen -->
+  <g stroke="#000" stroke-width="2">
+    <line x1="197" y1="140" x2="213" y2="140"/><line x1="205" y1="132" x2="205" y2="148"/>
+    <line x1="587" y1="140" x2="603" y2="140"/><line x1="595" y1="132" x2="595" y2="148"/>
+  </g>
 
-        <section data-section="meaning">
-          <h2><span class="part">06</span>What it means</h2>
-          <p>Placeholder conclusions and references.</p>
-          <p class="cite">Bouma, H. (1970). Interaction effects in parafoveal letter recognition. <i>Nature</i>, 226, 177–178.<br>
-            Deza, A., Jonnalagadda, A., &amp; Eckstein, M. P. (2019). Towards metamerism via foveated style transfer. <i>ICLR</i>.</p>
-        </section>
+  <!-- Bouma (1970): a lowercase Courier letter flanked by x on both sides, left or right of fixation -->
+  <g font-family="Courier New, Courier, monospace" font-size="26" fill="#000" text-anchor="middle" dominant-baseline="central">
+    <text x="276" y="138">x</text><text x="300" y="138">k</text><text x="324" y="138">x</text>
+  </g>
+
+  <!-- Bouma (1970): the observer names the letter aloud; the experimenter writes it down -->
+  <g font-family="IBM Plex Sans, sans-serif" font-size="16" fill="#000" text-anchor="middle">
+    <text x="595" y="90">"k"</text>
+  </g>
+</svg>
+</div>
+<figcaption><b>Figure 3.</b> An example trial, drawn after Bouma <span class="cite">(1970)</span>. The observer says the middle letter aloud.</figcaption>
+</figure>
+<p>Bouma's observer named the letter out loud. We ask the model the same question, "What was the middle letter?", but it must pick one of the 25 letters, even when guessing (a forced choice).</p>
+<h3>Psychometric function fitting</h3>
+<p>Bouma tested each spacing about 100 times, at distances from 1° to 10.5° from fixation. Accuracy rises with spacing along an S-shaped curve, one curve per distance. The critical spacing is where a curve gets close to the accuracy for a letter on its own.</p>
+<figure>
+<div class="display">
+<div class="display-row one" style="grid-template-columns: minmax(0, 560px)">
+<div class="tile"><img src="img/coates2021_fig2a.png" alt=""></div>
+</div>
+</div>
+<figcaption><b>Figure 4.</b> Bouma's data (dots) with fitted psychometric functions, one colour per distance from fixation. The further from fixation, the further right the curve: the letters must be further apart to be read. From Coates et al. <span class="cite">(2021)</span>.</figcaption>
+</figure>
+</section>
+
+<h1 class="big-title">Crowding in Vision Language Models</h1>
+<section data-section="vlm">
+<h2>What we want to find out</h2>
+<p>A VLM sees the whole image at the same resolution, so it may not crowd at all.</p>
+<ol>
+<li><b>Do VLMs crowd?</b> First with plain images, then with images degraded the way human peripheral vision degrades them <span class="cite">(Texture Tiling Model; Balas et al., 2009)</span>.</li>
+<li><b>Do they follow Bouma's rule?</b> Does the critical spacing grow with eccentricity, at about half?</li>
+<li><b>Can we fit the same psychometric functions?</b> Model curves next to Bouma's.</li>
+</ol>
+</section>
+
+<section data-section="model">
+<h2>References</h2>
+<p class="cite">Balas, B., Nakano, L., &amp; Rosenholtz, R. (2009). A summary-statistic representation in peripheral vision explains visual crowding. <i>Journal of Vision</i>, 9(12):13, 1–18.<br>
+Bouma, H. (1970). Interaction effects in parafoveal letter recognition. <i>Nature</i>, 226, 177–178.<br>
+Coates, D. R., Ludowici, C. J. H., &amp; Chung, S. T. L. (2021). The generality of the critical spacing for crowded optotypes: From Bouma to the 21st century. <i>Journal of Vision</i>, 21(11):18, 1–22.<br>
+Deza, A., Jonnalagadda, A., &amp; Eckstein, M. P. (2019). Towards metamerism via foveated style transfer. <i>ICLR</i>.<br>
+Pelli, D. G., Palomares, M., &amp; Majaj, N. J. (2004). Crowding is unlike ordinary masking: Distinguishing feature integration from detection. <i>Journal of Vision</i>, 4(12), 1136–1169.</p>
+</section>
       </article>
 
       <!-- ================= NOTEBOOK ================= -->
@@ -157,14 +161,12 @@
   targetX = centre + eccentricity * pixelsPerDegree
   draw.text((targetX, centre), target, fill=<span class="tok-s">"black"</span>, font=font, anchor=<span class="tok-s">"mm"</span>)
   ...</pre>
-            <div class="out"><img src="img/crowd_original.png" alt=""></div>
           </div></div>
 
           <div class="cell"><div class="prompt">[24]</div><div class="body">
 <pre>metamerLetters = neuroFovea(exampleLetters, seed=<span class="tok-n">0</span>)
 print(<span class="tok-s">"one metamer: %.1f s"</span> % (time.time() - startTime))</pre>
             <div class="out">one metamer: 2.8 s</div>
-            <div class="out"><img src="img/crowd_metamer.png" alt=""></div>
           </div></div>
         </section>
 
@@ -201,5 +203,6 @@ print(<span class="tok-s">"one metamer: %.1f s"</span> % (time.time() - startTim
 </footer>
 
 <script src="site.js"></script>
+<script src="demos.js"></script>
 </body>
 </html>
