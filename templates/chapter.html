@@ -33,59 +33,7 @@
 
       <!-- ================= NOTEBOOK ================= -->
       <div class="face notebook" id="notebook" hidden>
-
-        <section data-section="vlm">
-          <div class="nb-part">03 · Doing it with a VLM</div>
-
-          <div class="cell md"><div class="prompt"></div><div class="body">
-            <h3>The drawing function</h3>
-            <p><code>eccentricity</code> is the distance from the fixation cross to the target; <code>spacing</code> is the distance from the target to each flanker. Both are in degrees.</p>
-          </div></div>
-
-          <div class="cell"><div class="prompt">[7]</div><div class="body">
-<pre><span class="tok-k">def</span> drawCrowdingDisplay(target, leftFlanker, rightFlanker, eccentricity, spacing):
-  img  = Image.new(<span class="tok-s">"RGB"</span>, (imageSize, imageSize), <span class="tok-s">"white"</span>)
-  draw = ImageDraw.Draw(img)
-  font = ImageFont.truetype(fontPath, letterSize)
-
-  <span class="tok-c"># fixation cross in the centre</span>
-  draw.line((centre - <span class="tok-n">8</span>, centre, centre + <span class="tok-n">8</span>, centre), fill=<span class="tok-s">"black"</span>, width=<span class="tok-n">2</span>)
-  draw.line((centre, centre - <span class="tok-n">8</span>, centre, centre + <span class="tok-n">8</span>), fill=<span class="tok-s">"black"</span>, width=<span class="tok-n">2</span>)
-
-  <span class="tok-c"># target to the right of the cross</span>
-  targetX = centre + eccentricity * pixelsPerDegree
-  draw.text((targetX, centre), target, fill=<span class="tok-s">"black"</span>, font=font, anchor=<span class="tok-s">"mm"</span>)
-  ...</pre>
-          </div></div>
-
-          <div class="cell"><div class="prompt">[24]</div><div class="body">
-<pre>metamerLetters = neuroFovea(exampleLetters, seed=<span class="tok-n">0</span>)
-print(<span class="tok-s">"one metamer: %.1f s"</span> % (time.time() - startTime))</pre>
-            <div class="out">one metamer: 2.8 s</div>
-          </div></div>
-        </section>
-
-        <section data-section="model">
-          <div class="nb-part">04 · What the model did</div>
-          <div class="cell"><div class="prompt">[ ]</div><div class="body">
-<pre>letterResults = {}
-<span class="tok-k">for</span> version <span class="tok-k">in</span> versions:
-  <span class="tok-k">for</span> trial <span class="tok-k">in</span> letterTrials:
-    probs  = sloanProbs(img)
-    answer = sloanLetters[np.argmax(probs)]</pre>
-            <div class="out">not run yet</div>
-          </div></div>
-        </section>
-
-        <section data-section="compare">
-          <div class="nb-part">05 · Model versus humans</div>
-          <div class="cell md"><div class="prompt"></div><div class="body"><p>Not run yet.</p></div></div>
-        </section>
-
-        <section data-section="meaning">
-          <div class="nb-part">06 · What it means</div>
-          <div class="cell md"><div class="prompt"></div><div class="body"><p>Exercises from the notebook go here.</p></div></div>
-        </section>
+{{notebook}}
       </div>
 
     </div>

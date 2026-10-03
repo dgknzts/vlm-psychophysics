@@ -409,10 +409,17 @@ figcaption b { color: var(--ink); font-weight: 600; }
   font-family: var(--code);
   font-size: 0.8rem;
   padding: 0.5rem 0.2rem;
-  white-space: pre-wrap;
+  white-space: pre;
   color: var(--ink-soft);
 }
-.cell .out img { background: #fff; border-radius: 2px; max-width: 32rem; }
+.cell .out { overflow-x: auto; }
+.cell .out img { background: #fff; border-radius: 2px; max-width: min(100%, 36rem); }
+.nb-file {
+  font-family: var(--code);
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  margin: 1.4rem 0 0.6rem 3.8rem;
+}
 .tok-k { color: #be95ff; }
 .tok-s { color: #6fdc8c; }
 .tok-c { color: var(--ink-soft); font-style: italic; }
@@ -455,4 +462,5 @@ figcaption b { color: var(--ink); font-weight: 600; }
   .display-row.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .cell { grid-template-columns: minmax(0, 1fr); gap: 0.2rem; }
   .cell .prompt { text-align: left; padding-top: 0; }
+  .nb-file { margin-left: 0; }
 }

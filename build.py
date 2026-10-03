@@ -23,9 +23,14 @@ What the Markdown file can contain:
   **Figure 1.** text           the caption under the figure above it
   *whole paragraph*            a "work in progress" note
   - item                       reference list lines
+
+The Notebook view is made from the chapter's notebooks (notebookFiles below). Each cell
+says which part it belongs to in its metadata, e.g. "section": "vlm"; cells without one
+are left out. Code, printed output and pictures are shown as saved in the notebook.
 """
 
 import html
+import json
 import os
 import re
 import shutil
@@ -36,6 +41,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 chapterFolder = "chapters/crowding"
 chapterFile  = chapterFolder + "/crowding.md"
 templateFile = "templates/chapter.html"
+notebookFiles = [chapterFolder + "/code/run_model.ipynb", chapterFolder + "/code/analysis.ipynb"]
 outputFile   = "design/chapter.html"
 
 # the six parts of every chapter, in order; the notebook view uses the same names
@@ -195,12 +201,109 @@ introHtml = ""
 if len(intro) > 0:
   introHtml = '<div class="intro">\n' + "\n".join(intro) + "\n</div>\n\n"
 
+
+# ---- the notebook view: cells from the chapter's notebooks, grouped by part ----
+def codeHtml(source):
+  """Python code with the site's four colours (keywords, strings, comments, numbers)."""
+  try:
+    from pygments.lexers import PythonLexer
+    from pygments.token import Comment, Keyword, Number, Operator, String
+  except ImportError:
+    return html.escape(source)
+  out = []
+  for kind, text in PythonLexer().get_tokens(source):
+    cls = ""
+    if kind in Keyword or kind in Operator.Word:
+      cls = "tok-k"
+    elif kind in String:
+      cls = "tok-s"
+    elif kind in Comment:
+      cls = "tok-c"
+    elif kind in Number:
+      cls = "tok-n"
+    if cls:
+      out.append('<span class="' + cls + '">' + html.escape(text) + "</span>")
+    else:
+      out.append(html.escape(text))
+  return "".join(out).rstrip("\n")
+
+
+def notebookMarkdownHtml(source):
+  """A notebook's markdown cell: headings, lists, paragraphs, `code`."""
+  pieces = []
+  for block in re.split(r"\n\s*\n", source.strip()):
+    lines = block.split("\n")
+    if block.startswith("#"):
+      pieces.append("<h3>" + inline(block.lstrip("#").strip()) + "</h3>")
+    elif all(re.match(r"\d+\. ", line) for line in lines):
+      pieces.append("<ol>" + "".join("<li>" + inline(re.sub(r"^\d+\. ", "", line)) + "</li>" for line in lines) + "</ol>")
+    elif all(line.startswith("- ") for line in lines):
+      pieces.append("<ul>" + "".join("<li>" + inline(line[2:]) + "</li>" for line in lines) + "</ul>")
+    else:
+      pieces.append("<p>" + inline(" ".join(lines)) + "</p>")
+  return re.sub(r"`([^`]+)`", r"<code>\1</code>", "\n".join(pieces))
+
+
+def outputHtml(output):
+  """One saved output: printed text, a picture, or a result. Warnings (stderr) are left out."""
+  kind = output.get("output_type")
+  if kind == "stream" and output.get("name") == "stdout":
+    return '<div class="out">' + html.escape("".join(output["text"]).rstrip()) + "</div>"
+  if kind in ("display_data", "execute_result"):
+    data = output.get("data", {})
+    if "image/png" in data:
+      png = "".join(data["image/png"]).replace("\n", "")
+      return '<div class="out"><img src="data:image/png;base64,' + png + '" alt=""></div>'
+    if "text/plain" in data:
+      return '<div class="out">' + html.escape("".join(data["text/plain"]).rstrip()) + "</div>"
+  if kind == "error":
+    return '<div class="out">' + html.escape(output["ename"] + ": " + output["evalue"]) + "</div>"
+  return ""
+
+
+def cellHtml(cell):
+  source = "".join(cell["source"])
+  if cell["cell_type"] == "markdown":
+    return '<div class="cell md"><div class="prompt"></div><div class="body">\n' + notebookMarkdownHtml(source) + "\n</div></div>"
+  count = cell.get("execution_count")
+  prompt = "[" + (str(count) if count else " ") + "]"
+  outputs = "".join(outputHtml(o) for o in cell.get("outputs", []))
+  return ('<div class="cell"><div class="prompt">' + prompt + '</div><div class="body">\n<pre>'
+          + codeHtml(source) + "</pre>" + outputs + "</div></div>")
+
+
+cellsBySection = {}
+for notebookFile in notebookFiles:
+  name = os.path.basename(notebookFile)
+  for cell in json.load(open(notebookFile, encoding="utf-8"))["cells"]:
+    sectionId = cell.get("metadata", {}).get("section")
+    if sectionId in sectionIds:
+      cellsBySection.setdefault(sectionId, []).append((name, cell))
+
+notebookParts = []
+for number, (heading, pieces, bigTitle, shortLabel) in enumerate(sections):
+  sectionId = sectionIds[number]
+  if sectionId not in cellsBySection:
+    continue
+  out = ['<section data-section="' + sectionId + '">',
+         '<div class="nb-part">' + "%02d" % (number + 1) + " · " + html.escape(shortLabel) + "</div>"]
+  shownFile = None
+  for name, cell in cellsBySection[sectionId]:
+    if name != shownFile:
+      out.append('<div class="nb-file">' + html.escape(name) + "</div>")
+      shownFile = name
+    out.append(cellHtml(cell))
+  notebookParts.append("\n".join(out) + "\n</section>")
+notebookHtml = "\n\n".join(notebookParts)
+
 page = open(templateFile, encoding="utf-8").read()
 page = page.replace("{{title}}", html.escape(title))
 page = page.replace("{{toc}}", "\n".join(tocLines))
 page = page.replace("{{article}}", introHtml + "\n\n".join(articleParts))
+page = page.replace("{{notebook}}", notebookHtml)
 page = page.replace("<!-- Template for chapter pages. build.py fills the {{...}} slots from chapters/*.md -->\n", "")
 page = page.replace("<!doctype html>", "<!doctype html>\n<!-- Made by build.py from " + chapterFile + ". Edit that file, not this one. -->", 1)
 
 open(outputFile, "w", encoding="utf-8", newline="\n").write(page)
-print("wrote", outputFile, "from", chapterFile, "-", len(sections), "parts")
+print("wrote", outputFile, "from", chapterFile, "-", len(sections), "parts,",
+      sum(len(c) for c in cellsBySection.values()), "notebook cells")

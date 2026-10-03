@@ -1,7 +1,7 @@
 """Figures for the chapter page, in the site's style: white image, dark ink, IBM Plex Sans,
 fixation-dot red for the model. The page puts them on its mid-grey display.
 
-Used by stimuli.py (the conditions figure) and analyze.py (the results figure).
+Used by stimuli.py (Figures 5 and 6) and analysis.ipynb (Figure 7).
 """
 from pathlib import Path
 
