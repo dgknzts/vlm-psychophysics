@@ -13,3 +13,6 @@ __pycache__/
 
 # Obsidian
 .obsidian/
+
+# Paper PDFs (copyright; kept locally only)
+chapters/*/sources/

@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- Made by build.py from chapters/crowding.md. Edit that file, not this one. -->
+<!-- Made by build.py from chapters/crowding/crowding.md. Edit that file, not this one. -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -33,7 +33,10 @@
 <ol>
 <li>What crowding is, and Bouma's simple spacing rule for it.</li>
 <li>The original experiment: Bouma <span class="cite">(1970)</span> and his data.</li>
-<li>Crowding in vision-language models: what we want to find out.</li>
+<li>The same task for a vision-language model.</li>
+<li>What the model did.</li>
+<li>The model next to Bouma's observers.</li>
+<li>What it means.</li>
 </ol>
 <h3>What is crowding?</h3>
 <p>An object (target) you can read when its isolated becomes very difficult to discriminate when surrounded by neighboring objects (flankers).</p>
@@ -117,22 +120,92 @@
 
 <h1 class="big-title">Crowding in Vision Language Models</h1>
 <section data-section="vlm">
-<h2>What we want to find out</h2>
-<p>A VLM sees the whole image at the same resolution, so it may not crowd at all.</p>
+<h2>Doing it with a VLM</h2>
+<p>A VLM sees the whole image at the same resolution, so it may not crowd at all. We test this with one simple version of Bouma's experiment.</p>
+<h3>The observer</h3>
+<p>The observer is Qwen3-VL-2B-Instruct, a small open vision-language model. It gets one image and one question and answers with text. We do not let it write freely. We read the score it gives to each of the 25 letters as its first word and take the highest one. So, like Bouma's observer, it always answers with a letter, and guessing gives 1 in 25 correct.</p>
+<h3>The images</h3>
+<figure>
+<div class="display">
+<div class="display-row one" style="grid-template-columns: minmax(0, 760px)">
+<div class="tile"><img src="img/vlm_conditions.png" alt=""></div>
+</div>
+</div>
+<figcaption><b>Figure 5.</b> The images the model sees. Top: two whole images, with the target at the centre (0°) and at 10°. Bottom: the six conditions, cut around the target.</figcaption>
+</figure>
+<p><b>Letters.</b> Lowercase Courier at Bouma's size: the x-height is 13.4 arcmin and one letter slot is 0.29°.</p>
+<p><b>Pixels.</b> Bouma typed his letters on paper, but a model needs pixels. We draw the display as a 24-inch, 1920-pixel monitor would show it from Bouma's 50 cm: about 32 pixels per degree. A small letter is then 7 pixels tall.</p>
+<p><b>Position.</b> The image is 1024 × 128 pixels (32° × 4°). Its centre plays the role of fixation. The target is at the centre (0°) or 10° to the right.</p>
+<p><b>Flankers.</b> One letter on each side of the target, 1, 2, 4, 8 or 16 slots away, centre to centre (0.29° to 4.7°). Or no flankers at all.</p>
+<p><b>Trials.</b> Each of the 25 letters four times per condition: 100 trials per point, as in Bouma's experiment. 1,200 trials in all.</p>
+<p>The flankers are random letters, not Bouma's "x". In a first run with "x" flankers the model was almost never wrong, at any spacing. Random letters from the same set as the target are also what most later studies use <span class="cite">(Pelli et al., 2004)</span>.</p>
+<h3>The question</h3>
+<p>The same question for every image: "There is either one letter or a row of three letters. If there are three, name the middle one. If there is one, name it. Answer with a single lowercase letter."</p>
+<h3>How the model sees the image</h3>
+<p>The model does not see letters. First it cuts the image into small squares of 16 × 16 pixels, about half a degree here. Each square becomes a list of numbers that describes what is in it: a stroke here, a curve there. Then these descriptions are mixed with each other, so each square can use what the others contain. Last, every block of 2 × 2 squares is packed into one token, the unit that the language part of the model reads. Our image becomes 32 × 4 = 128 tokens.</p>
+<figure>
+<div class="display">
+<div class="display-row one" style="grid-template-columns: minmax(0, 760px)">
+<div class="tile"><img src="img/vlm_grid.png" alt=""></div>
+</div>
+</div>
+<figcaption><b>Figure 6.</b> The model's grid on our images. Top: the whole image in tokens (red). Bottom: close-ups at 10°, with the tokens and the 16-pixel squares inside them (dotted). When the flankers touch the target, some squares hold parts of two letters.</figcaption>
+</figure>
+<p>This is very different from an eye. Human vision is sharp only at the centre, and the area over which features are pooled grows with distance from fixation. That growing area is a common explanation for Bouma's rule <span class="cite">(Balas et al., 2009)</span>. The model has none of this: the grid is the same at 10° as at the centre. So if crowding only came from pooling that grows with distance, the model should crowd the same at 0° and at 10°.</p>
+<h3>What is different from Bouma</h3>
+<p><b>No time limit.</b> Bouma showed each line for 200 ms. The model sees the image once, for as long as it needs.</p>
+<p><b>No fixation.</b> The model sees the whole image at once. Here eccentricity only means distance from the centre of the image.</p>
+<p><b>No "illegible".</b> Bouma's observer could say he could not read the letter. The model must choose.</p>
+<p><b>Different flankers and positions.</b> Random letters instead of "x", and only two positions: 0° and 10°.</p>
+<h3>What we want to find out</h3>
 <ol>
-<li><b>Do VLMs crowd?</b> First with plain images, then with images degraded the way human peripheral vision degrades them <span class="cite">(Texture Tiling Model; Balas et al., 2009)</span>.</li>
-<li><b>Do they follow Bouma's rule?</b> Does the critical spacing grow with eccentricity, at about half?</li>
-<li><b>Can we fit the same psychometric functions?</b> Model curves next to Bouma's.</li>
+<li>Do close flankers make the model wrong?</li>
+<li>Is the model worse at 10° than at 0°, as humans are?</li>
+<li>When it is wrong, does it name a flanker?</li>
 </ol>
 </section>
 
 <section data-section="model">
-<h2>References</h2>
+<h2>What the model did</h2>
+<figure>
+<div class="display">
+<div class="display-row one" style="grid-template-columns: minmax(0, 640px)">
+<div class="tile"><img src="img/vlm_results.png" alt=""></div>
+</div>
+</div>
+<figcaption><b>Figure 7.</b> Proportion correct against target–flanker spacing. Each model point is 100 trials. In grey, Bouma's own data at the two eccentricities closest to ours, 1° and 7°, with "x" flankers. He did not test flanked letters at 0° or 10°.</figcaption>
+</figure>
+<p>A letter on its own was never a problem. The model named it correctly in all 100 trials, both at the centre and at 10°.</p>
+<p>Flankers changed that, but only when they were close. At the centre, the model was wrong in 43 of 100 trials when the flankers touched the target (0.29°). From 0.58° on, it was almost always right. At 10° the drop was bigger and reached further: 21% correct at 0.29°, 68% at 0.58° and 92% at 1.17°. Only at 4.7° was it back to 100%.</p>
+<p>So the model is worse at 10° than at the centre, as humans are. Fitting the same S-shaped curve as for Bouma's data gives a critical spacing of 0.3–0.4° at the centre and 0.6–1.1° at 10°. The range comes from the cutoff: 60% or 90% of the way from guessing to the letter on its own.</p>
+<p>When the model was wrong, it named one of the flankers, in all 169 wrong answers. It was nearly always the flanker on the right: 119 of 123 times at 10°, and 39 of 46 times at the centre.</p>
+</section>
+
+<section data-section="compare">
+<h2>Model versus humans</h2>
+<p>Some of what the model does looks like human crowding.</p>
+<p><b>Close flankers hurt, more so away from the centre.</b> This is the basic finding of Bouma <span class="cite">(1970)</span>.</p>
+<p><b>Wrong answers are flankers.</b> Crowded human observers also often report a flanker instead of the target <span class="cite">(Strasburger et al., 1991)</span>.</p>
+<p><b>The outer flanker does the damage.</b> Bouma noticed the same in a pilot: the interference was stronger when the "x" was on the side away from fixation <span class="cite">(Bouma, 1970)</span>. But the model also preferred the right flanker at the centre, where there is no inner or outer side. Our target was always to the right, so here we cannot tell "outer" from "right".</p>
+<p>The human data also has things the model does not.</p>
+<p><b>Acuity falls with eccentricity.</b> Bouma's observer read a letter on its own 98% of the time at 3°, 82% at 5°, 70% at 7° and 44% at 10.5°. The model read every letter on its own, at 0° and at 10°.</p>
+<p><b>Bouma's window is much larger.</b> In our refit of Bouma's data, the critical spacing at 7° is 1.8° to 5.8° depending on the cutoff, or 0.26 to 0.83 times the eccentricity. The model at 10°, further out, needs only 0.6° to 1.1°: 0.06 to 0.11 times the eccentricity. That is about the size of a human's window at 2° to 3° (0.34° to 1.81° in Bouma's data).</p>
+<p><b>The window does not follow the grid.</b> At the centre, the flankers only hurt when they were closer than about 0.3–0.4°, less than one 16-pixel square. There, a flanker hurts mostly when it touches the target and shares squares with it. At 10° the window is 0.6–1.1°, one or two squares, although the grid is exactly the same there. In a side test, we also moved the letters so that a token edge cut the target in half, or so that the target sat in the middle of a token. Accuracy changed by at most 5 points. So the grid alone does not explain the model's window.</p>
+<p><b>The flankers were harder for the model.</b> Bouma used "x", the model got random letters. Flankers that look like the target crowd humans more (see Coates et al., 2021, for a review). So with random letters, Bouma's window would likely be even larger, not smaller.</p>
+</section>
+
+<section data-section="meaning">
+<h2>What it means</h2>
+<p>The model crowds, but only a little. It shows some of the human signs: close flankers hurt, the wrong answer is a flanker, and it gets worse away from the centre. But its window is several times smaller than a human's at the same place, and a single letter is never lost.</p>
+<p>We do not know yet why the model is worse at 10° than at the centre. Its grid is the same everywhere, so it is not about sharpness. In an earlier test, with the target between 2° and 7°, we saw no change with distance. So the centre of the image may be special to the model, rather than distance itself.</p>
+<p>Two next steps. First, more positions on both sides of the centre. This would show whether the window really grows with distance, and would separate "outer" from "right". Second, give the model a human-like periphery before it sees the image <span class="cite">(Deza et al., 2019)</span>, and see if its window grows to Bouma's size.</p>
+<h3>References</h3>
 <p class="cite">Balas, B., Nakano, L., &amp; Rosenholtz, R. (2009). A summary-statistic representation in peripheral vision explains visual crowding. <i>Journal of Vision</i>, 9(12):13, 1–18.<br>
 Bouma, H. (1970). Interaction effects in parafoveal letter recognition. <i>Nature</i>, 226, 177–178.<br>
 Coates, D. R., Ludowici, C. J. H., &amp; Chung, S. T. L. (2021). The generality of the critical spacing for crowded optotypes: From Bouma to the 21st century. <i>Journal of Vision</i>, 21(11):18, 1–22.<br>
 Deza, A., Jonnalagadda, A., &amp; Eckstein, M. P. (2019). Towards metamerism via foveated style transfer. <i>ICLR</i>.<br>
-Pelli, D. G., Palomares, M., &amp; Majaj, N. J. (2004). Crowding is unlike ordinary masking: Distinguishing feature integration from detection. <i>Journal of Vision</i>, 4(12), 1136–1169.</p>
+Pelli, D. G., Palomares, M., &amp; Majaj, N. J. (2004). Crowding is unlike ordinary masking: Distinguishing feature integration from detection. <i>Journal of Vision</i>, 4(12), 1136–1169.<br>
+Strasburger, H., Harvey, L. O., Jr., &amp; Rentschler, I. (1991). Contrast thresholds for identification of numeric characters in direct and eccentric view. <i>Perception &amp; Psychophysics</i>, 49(6), 495–508.</p>
 </section>
       </article>
 

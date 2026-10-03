@@ -1,4 +1,7 @@
-"""Turn chapters/<name>.md into design/chapter.html.
+"""Turn chapters/<name>/<name>.md into design/chapter.html.
+
+Each chapter has its own folder: the text, img/ (its figures), data/ and sources/.
+Pictures are linked as img/... from the Markdown and copied to design/img/ on build.
 
 Run:  python build.py
 
@@ -25,11 +28,13 @@ What the Markdown file can contain:
 import html
 import os
 import re
+import shutil
 
 # work from the folder this script is in, wherever it is run from
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-chapterFile  = "chapters/crowding.md"
+chapterFolder = "chapters/crowding"
+chapterFile  = chapterFolder + "/crowding.md"
 templateFile = "templates/chapter.html"
 outputFile   = "design/chapter.html"
 
@@ -71,7 +76,7 @@ def figureHtml(imageLine, caption):
   # a single .svg is a drawing: put the svg itself in the page
   # a number as the label, e.g. ![540](img/x.svg), sets its largest width in pixels
   if len(images) == 1 and images[0][1].endswith(".svg"):
-    svg = open("design/" + images[0][1], encoding="utf-8").read().strip()
+    svg = open(chapterFolder + "/" + images[0][1], encoding="utf-8").read().strip()
     width = ""
     if images[0][0].isdigit():
       width = images[0][0]
@@ -79,6 +84,10 @@ def figureHtml(imageLine, caption):
 
   tiles = []
   for label, src in images:
+    if src != "":
+      # the page lives in design/, so copy the picture next to it
+      os.makedirs(os.path.dirname("design/" + src), exist_ok=True)
+      shutil.copyfile(chapterFolder + "/" + src, "design/" + src)
     if src == "":
       tiles.append('<div class="tile"><div class="empty">' + html.escape(label).replace(" (", "<br>(") + '</div></div>')
     elif label.isdigit() or label == "":
