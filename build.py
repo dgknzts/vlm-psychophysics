@@ -1,7 +1,8 @@
-"""Turn chapters/<name>/<name>.md into design/chapter.html.
+"""Turn chapters/<name>/<name>.md into chapters/<name>/<name>.html.
 
-Each chapter has its own folder: the text, img/ (its figures), data/ and sources/.
-Pictures are linked as img/... from the Markdown and copied to design/img/ on build.
+Each chapter has its own folder: the text, the page made from it, img/ (its figures),
+code/, data/ and sources/. Pictures are linked as img/... from the Markdown. The page uses
+the shared style.css, site.js and demos.js in design/.
 
 Run:  python build.py
 
@@ -19,6 +20,7 @@ What the Markdown file can contain:
   ![label]()                   an empty placeholder tile
   ![](img/drawing.svg)         one .svg on its own line: a full-width drawing
   ![540](img/drawing.svg)      the same, at most 540 px wide (also works for one .png)
+  ![640](img/animation.mp4)    a video, with play/pause and a time bar
   [demo: bouma]                a playable figure (written in design/demos.js)
   **Figure 1.** text           the caption under the figure above it
   *whole paragraph*            a "work in progress" note
@@ -33,7 +35,6 @@ import html
 import json
 import os
 import re
-import shutil
 
 # work from the folder this script is in, wherever it is run from
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -42,7 +43,7 @@ chapterFolder = "chapters/crowding"
 chapterFile  = chapterFolder + "/crowding.md"
 templateFile = "templates/chapter.html"
 notebookFiles = [chapterFolder + "/code/run_model.ipynb", chapterFolder + "/code/analysis.ipynb"]
-outputFile   = "design/chapter.html"
+outputFile   = chapterFolder + "/crowding.html"
 
 # the six parts of every chapter, in order; the notebook view uses the same names
 sectionIds = ["classic", "human", "vlm", "model", "compare", "meaning"]
@@ -90,12 +91,11 @@ def figureHtml(imageLine, caption):
 
   tiles = []
   for label, src in images:
-    if src != "":
-      # the page lives in design/, so copy the picture next to it
-      os.makedirs(os.path.dirname("design/" + src), exist_ok=True)
-      shutil.copyfile(chapterFolder + "/" + src, "design/" + src)
     if src == "":
       tiles.append('<div class="tile"><div class="empty">' + html.escape(label).replace(" (", "<br>(") + '</div></div>')
+    elif src.endswith(".mp4"):
+      # a short animation: plays on its own, with play/pause and a time bar
+      tiles.append('<div class="tile"><video src="' + src + '" controls autoplay loop muted playsinline preload="auto"></video></div>')
     elif label.isdigit() or label == "":
       tiles.append('<div class="tile"><img src="' + src + '" alt=""></div>')
     else:

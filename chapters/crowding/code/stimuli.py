@@ -18,7 +18,8 @@ fixate anyway. The image centre plays the role of fixation.
 
 Font: Courier Prime (SIL Open Font License, fonts/OFL-CourierPrime.txt).
 
-Run: python stimuli.py     (prints the numbers, saves ../img/vlm_conditions.png and vlm_grid.png)
+Run: python stimuli.py     (prints the numbers, saves ../img/vlm_conditions.png, vlm_grid.png and Figure 6;
+                            run model_internals.py first for Figure 6's real numbers)
 """
 import math
 from pathlib import Path
@@ -111,6 +112,10 @@ def main():
   import figures
   figures.conditions_figure(HERE.parent / "img" / "vlm_conditions.png")
   figures.grid_figure(HERE.parent / "img" / "vlm_grid.png")
+  figures.step1_figure(HERE.parent / "img" / "vlm_step1.png")
+  # the rest of Figure 6 uses the model's real numbers, saved by model_internals.py
+  figures.step_animations(HERE.parent / "img")
+  figures.layers_figure(HERE.parent / "img" / "vlm_layers.png")
 
 
 if __name__ == "__main__":

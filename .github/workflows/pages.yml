@@ -1,4 +1,6 @@
-# Publishes the design/ folder to GitHub Pages on every push to main.
+# Publishes the site to GitHub Pages on every push to main: design/ (home page and shared
+# files) and chapters/ (the chapter pages and their figures), with the same folder layout
+# so the relative links work, and a root page that forwards to the home page.
 name: Pages
 
 on:
@@ -24,8 +26,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: Put the site together
+        run: |
+          mkdir _site
+          cp -r design chapters _site/
+          echo '<!doctype html><meta http-equiv="refresh" content="0; url=design/index.html">' > _site/index.html
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: design
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4
