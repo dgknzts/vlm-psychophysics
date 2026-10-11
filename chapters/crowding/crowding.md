@@ -81,9 +81,9 @@ A VLM has two parts. A vision encoder turns the image into tokens, and a languag
 
 ![640](img/vlm_step2.mp4)
 
-**Figure 6b.** The shaded square, step by step, with the model's real numbers.
+**Figure 6b.** The shaded square, step by step, with the model's real numbers. At the end, each of the 512 squares has its own 1,024 numbers.
 
-**3. Mix.** Every square looks at all the others and takes in some of what they hold, more from some than others. This happens once in each of the 24 layers. Afterwards, the numbers for the target's square also carry some of the flankers.
+**3. Mix.** After step 2, each square's numbers describe only its own 16 × 16 pixels. Our square holds the top of the k, but it does not know that an r sits right next to it. Mixing changes that: every square looks at all the others and takes in some of what they hold, more from some than others. This happens once in each of the 24 layers. Afterwards, our square's numbers also carry some of the r and the m.
 
 ![640](img/vlm_step3.mp4)
 

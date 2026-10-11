@@ -368,11 +368,13 @@ def step2_animation():
   flat = square.reshape(-1).astype(float)
   tints = {"red": "#ff8a94", "green": "#8fd18f", "blue": "#8fb0ff"}
   cmaps = {k: LinearSegmentedColormap.from_list(k, ["#1d1d1b", v]) for k, v in tints.items()}
-  sq_x, sq_top, sq_cell = 4.4, 7.3, 0.2
+  sq_x, sq_top, sq_cell = 4.6, 6.9, 0.175
+  size = 16 * sq_cell
+  depth = 0.28                                    # how far each colour layer sits behind the one in front
   L, W, H = 1.5, 10.0, 0.3                        # the lists: left edge, width, height
-  base_y = 3.6
+  base_y = 3.2
   rows = [("red", 1), ("green", 1), ("blue", 1), ("red", 2), ("green", 2), ("blue", 2)]
-  row_y = [3.1 - i * 0.45 for i in range(6)]      # where each copy sits, under the grey list
+  row_y = [2.75 - i * 0.42 for i in range(6)]      # where each copy sits, under the grey list
   # in the model's list the order is red (frame 1, 2), green (1, 2), blue (1, 2)
   slot = {("red", 1): 0, ("red", 2): 1, ("green", 1): 2, ("green", 2): 3, ("blue", 1): 4, ("blue", 2): 5}
   cw = W / flat.size
@@ -382,12 +384,28 @@ def step2_animation():
             ("rgb", 16, "The model reads each pixel three times: for red, green and blue"),
             ("twice", 14, "and all of it twice, because the same code also reads video (two frames)"),
             ("join", 18, "Put end to end: 1,536 numbers, rescaled from −1 (black) to 1 (white)"),
-            ("layer", 18, "Its first learned layer turns the 1,536 numbers into 1,024 (the real values)")]
+            ("layer", 18, "Its first learned layer turns the 1,536 numbers into 1,024 (the real values)"),
+            ("all", 1, "Each of the 512 squares gets 1,024 numbers like this, from its own pixels only")]
 
   def strip(x, y, w, values, cmap, vmin=0, vmax=255, alpha=1.0, edge=INK):
     ax.imshow(values.reshape(1, -1), cmap=cmap, vmin=vmin, vmax=vmax, aspect="auto", interpolation="nearest",
               extent=(x, x + w, y, y + H), alpha=alpha)
     ax.add_patch(plt.Rectangle((x, y), w, H, fill=False, ec=edge, lw=0.6, alpha=alpha))
+
+  def stack(x, shown, label="", alpha=1.0):
+    """The square as a 3-D block: a red, a green and a blue layer, one behind the other.
+    shown: how visible each layer is (red, green, blue)."""
+    for j in (2, 1, 0):                               # back to front
+      if shown[j] <= 0:
+        continue
+      colour = ("red", "green", "blue")[j]
+      x0, y0 = x + j * depth, sq_top - size + j * depth
+      ax.imshow(square, cmap=cmaps[colour], vmin=0, vmax=255, interpolation="nearest",
+                extent=(x0, x0 + size, y0, y0 + size), alpha=shown[j] * alpha)
+      ax.add_patch(plt.Rectangle((x0, y0), size, size, fill=False, ec=INK, lw=0.6, alpha=shown[j] * alpha))
+      ax.text(x0 + size + 0.08, y0 + 0.12, colour, fontsize=6.5, color=SOFT, alpha=shown[j] * alpha)
+    if label:
+      ax.text(x + (size + 2 * depth) / 2, sq_top - size - 0.32, label, ha="center", fontsize=7.5, color=SOFT, alpha=alpha)
 
   frames, durations = [], []
   for name, n, caption in phases:
@@ -396,7 +414,19 @@ def step2_animation():
       fig, ax = _frame((6.4, 4.4))
       ax.set_xlim(0, 12); ax.set_ylim(-0.1, 8.2); ax.axis("off")
       ax.text(6, 7.75, caption, ha="center", fontsize=9.5)
-      ax.add_patch(plt.Rectangle((sq_x, sq_top - 16 * sq_cell), 16 * sq_cell, 16 * sq_cell, fill=False, ec=RED, lw=1.2, alpha=0.5))
+      if name == "unroll":
+        ax.add_patch(plt.Rectangle((sq_x, sq_top - size), size, size, fill=False, ec=RED, lw=1.2, alpha=0.5))
+      elif name == "rgb":
+        stack(sq_x, [_ease((f - j * 4) / 6) for j in range(3)], "16 × 16 pixels × 3 colours")
+      else:
+        # two frames: the first block moves left, a copy appears on the right
+        m = u if name == "twice" else 1
+        left, right = sq_x - 2.3 * m, sq_x + 2.3
+        stack(left, [1, 1, 1], "frame 1" if m == 1 else "")
+        if m > 0.3:
+          stack(right, [1, 1, 1], "frame 2", alpha=min(1, (m - 0.3) / 0.5))
+        if m == 1:
+          ax.text(6, sq_top - size - 0.32, "× 2", ha="center", fontsize=8.5, color=SOFT)
 
       if name == "unroll":
         ax.add_patch(plt.Rectangle((L, base_y), W, H, fill=False, ec=SOFT, lw=0.6))
@@ -426,7 +456,7 @@ def step2_animation():
           ax.text(L - 0.1, y + H / 2, colour + ("" if frame == 1 else " again"), ha="right", va="center",
                   fontsize=7.5, color=SOFT, alpha=t)
 
-      if name in ("join", "layer"):
+      if name in ("join", "layer", "all"):
         t = u if name == "join" else 1
         seg = W / 6
         for i, (colour, frame) in enumerate(rows):
@@ -438,14 +468,15 @@ def step2_animation():
           for colour, frame in rows:
             s = slot[(colour, frame)]
             ax.text(L + (s + 0.5) * seg, base_y - 0.28, colour, ha="center", fontsize=7.5, color=SOFT)
-          ax.text(6, base_y - 0.7, "1,536 numbers, from −1 (black) to 1 (white)", ha="center", fontsize=8.5, color=SOFT)
+          ax.text(6, base_y - 0.62, "1,536 numbers, from −1 (black) to 1 (white)", ha="center", fontsize=8.5, color=SOFT)
 
-      if name == "layer":
+      if name in ("layer", "all"):
+        f, n = (f, n) if name == "layer" else (17, 18)     # "all" shows the finished picture
         a = _ease((f + 1) / 6)
-        ax.annotate("", xy=(6, 2.25), xytext=(6, 2.75), arrowprops=dict(arrowstyle="-|>", color=INK, lw=1, alpha=a))
-        ax.add_patch(plt.Rectangle((4.0, 1.55), 4.0, 0.65, fc="white", ec=INK, lw=0.7, alpha=a))
-        ax.text(6, 1.87, "learned layer: 1,536 in, 1,024 out", ha="center", va="center", fontsize=8.5, alpha=a)
-        ax.annotate("", xy=(6, 0.98), xytext=(6, 1.5), arrowprops=dict(arrowstyle="-|>", color=INK, lw=1, alpha=a))
+        ax.annotate("", xy=(6, 2.0), xytext=(6, 2.45), arrowprops=dict(arrowstyle="-|>", color=INK, lw=1, alpha=a))
+        ax.add_patch(plt.Rectangle((4.0, 1.4), 4.0, 0.55, fc="white", ec=INK, lw=0.7, alpha=a))
+        ax.text(6, 1.67, "learned layer: 1,536 in, 1,024 out", ha="center", va="center", fontsize=8.5, alpha=a)
+        ax.annotate("", xy=(6, 0.95), xytext=(6, 1.35), arrowprops=dict(arrowstyle="-|>", color=INK, lw=1, alpha=a))
         shown = int(round(1024 * _ease((f - 5) / (n - 6))))
         if shown > 0:
           values = z["embed"]
@@ -473,7 +504,7 @@ def step3_animation():
   sqw = (X1 - X0) / (c1 - c0)
   box = (X0 + (sx // PATCH_PX - c0) * sqw, Y1 - (sy // PATCH_PX + 1) * sqw)
   frames, durations = [], []
-  steps = [(None, "Our square (black box), before the first layer")] + \
+  steps = [(None, "Where step 2 ended: our square (black box) knows only its own pixels")] + \
           [(L, "Layer %d: red shows where our square takes information from" % (L + 1)) for L in range(24)]
   for L, caption in steps:
     fig, ax = _frame()
