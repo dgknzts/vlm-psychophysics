@@ -1,7 +1,7 @@
-"""Turn chapters/<name>/<name>.md into chapters/<name>/<name>.html.
+"""Turn every chapters/<name>/<name>.md into chapters/<name>/<name>.html.
 
-Each chapter has its own folder: the text, the page made from it, img/ (its figures),
-code/, data/ and sources/. Pictures are linked as img/... from the Markdown. The page uses
+Every folder chapters/<name>/ that has a <name>.md is built. Each chapter has its own
+folder: the text, the page made from it, img/ (its figures), code/, data/ and sources/. Pictures are linked as img/... from the Markdown. The page uses
 the shared style.css, site.js and demos.js in design/.
 
 Run:  python build.py
@@ -26,9 +26,9 @@ What the Markdown file can contain:
   *whole paragraph*            a "work in progress" note
   - item                       reference list lines
 
-The Notebook view is made from the chapter's notebooks (notebookFiles below). Each cell
-says which part it belongs to in its metadata, e.g. "section": "vlm"; cells without one
-are left out. Code, printed output and pictures are shown as saved in the notebook.
+The Notebook view is made from the chapter's notebooks (code/run_model.ipynb and
+code/analysis.ipynb, if they exist). Each cell says which part it belongs to in its
+metadata, e.g. "section": "vlm"; cells without one are left out. Code, printed output and pictures are shown as saved in the notebook.
 """
 
 import html
@@ -39,11 +39,10 @@ import re
 # work from the folder this script is in, wherever it is run from
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-chapterFolder = "chapters/crowding"
-chapterFile  = chapterFolder + "/crowding.md"
 templateFile = "templates/chapter.html"
-notebookFiles = [chapterFolder + "/code/run_model.ipynb", chapterFolder + "/code/analysis.ipynb"]
-outputFile   = chapterFolder + "/crowding.html"
+
+# a chapter's notebooks, in this order, each only if it exists
+notebookNames = ["run_model.ipynb", "analysis.ipynb"]
 
 # the six parts of every chapter, in order; the notebook view uses the same names
 sectionIds = ["classic", "human", "vlm", "model", "compare", "meaning"]
@@ -76,7 +75,7 @@ def demoHtml(name, caption):
   return withCaption('<div class="drawing" data-demo="' + name + '"></div>', caption)
 
 
-def figureHtml(imageLine, caption):
+def figureHtml(imageLine, caption, chapterFolder):
   """One line of ![label](src) images, plus its caption, as a figure."""
   images = re.findall(r"!\[(.*?)\]\((.*?)\)", imageLine)
 
@@ -130,76 +129,6 @@ def blockHtml(block):
     return '<p class="pending">' + inline(text[1:-1]) + "</p>"
   return "<p>" + inline(text) + "</p>"
 
-
-# ---- read the Markdown and split it into blocks separated by blank lines ----
-markdown = open(chapterFile, encoding="utf-8").read()
-blocks   = [b.strip() for b in re.split(r"\n\s*\n", markdown) if b.strip() != ""]
-
-title    = ""
-intro    = []   # html pieces before the first ## heading
-sections = []   # list of [heading, list of html pieces, big title shown above it]
-bigTitle = ""   # a later "# " line: a big title before the next part
-
-i = 0
-while i < len(blocks):
-  block = blocks[i]
-  if block.startswith("# ") and title == "":
-    title = block[2:].strip()
-  elif block.startswith("# "):
-    bigTitle = block[2:].strip()
-  elif block.startswith("## "):
-    heading = block[3:].strip()
-    shortLabel = heading
-    if " | " in heading:
-      heading, shortLabel = [part.strip() for part in heading.split(" | ", 1)]
-    sections.append([heading, [], bigTitle, shortLabel])
-    bigTitle = ""
-  elif block.startswith("### "):
-    if len(sections) == 0:
-      intro.append("<h3>" + inline(block[4:].strip()) + "</h3>")
-    else:
-      sections[-1][1].append("<h3>" + inline(block[4:].strip()) + "</h3>")
-  else:
-    # where this block goes: the intro, or the current part
-    if len(sections) == 0:
-      pieces = intro
-    else:
-      pieces = sections[-1][1]
-
-    isImages = re.fullmatch(r"(\s*!\[.*?\]\(.*?\))+\s*", block)
-    isDemo   = re.fullmatch(r"\[demo:\s*(\w+)\]", block)
-    if isImages or isDemo:
-      # the next block is the caption if it starts with **Figure
-      caption = ""
-      if i + 1 < len(blocks) and blocks[i + 1].startswith("**Figure"):
-        caption = " ".join(blocks[i + 1].split("\n"))
-        i = i + 1
-      if isDemo:
-        pieces.append(demoHtml(isDemo.group(1), caption))
-      else:
-        pieces.append(figureHtml(block, caption))
-    else:
-      pieces.append(blockHtml(block))
-  i = i + 1
-
-# ---- build the table of contents and the article ----
-tocLines     = []
-articleParts = []
-for number, (heading, pieces, bigTitle, shortLabel) in enumerate(sections):
-  sectionId = sectionIds[number]
-  tocLines.append('        <li><a href="#" data-section="' + sectionId + '">' + html.escape(shortLabel) + '</a></li>')
-  bigTitleHtml = ""
-  if bigTitle != "":
-    bigTitleHtml = '<h1 class="big-title">' + inline(bigTitle) + '</h1>\n'
-  articleParts.append(
-    bigTitleHtml
-    + '<section data-section="' + sectionId + '">\n'
-    + '<h2>' + html.escape(heading) + '</h2>\n'
-    + "\n".join(pieces) + "\n</section>")
-
-introHtml = ""
-if len(intro) > 0:
-  introHtml = '<div class="intro">\n' + "\n".join(intro) + "\n</div>\n\n"
 
 
 # ---- the notebook view: cells from the chapter's notebooks, grouped by part ----
@@ -272,38 +201,123 @@ def cellHtml(cell):
           + codeHtml(source) + "</pre>" + outputs + "</div></div>")
 
 
-cellsBySection = {}
-for notebookFile in notebookFiles:
-  name = os.path.basename(notebookFile)
-  for cell in json.load(open(notebookFile, encoding="utf-8"))["cells"]:
-    sectionId = cell.get("metadata", {}).get("section")
-    if sectionId in sectionIds:
-      cellsBySection.setdefault(sectionId, []).append((name, cell))
 
-notebookParts = []
-for number, (heading, pieces, bigTitle, shortLabel) in enumerate(sections):
-  sectionId = sectionIds[number]
-  if sectionId not in cellsBySection:
-    continue
-  out = ['<section data-section="' + sectionId + '">',
-         '<div class="nb-part">' + "%02d" % (number + 1) + " · " + html.escape(shortLabel) + "</div>"]
-  shownFile = None
-  for name, cell in cellsBySection[sectionId]:
-    if name != shownFile:
-      out.append('<div class="nb-file">' + html.escape(name) + "</div>")
-      shownFile = name
-    out.append(cellHtml(cell))
-  notebookParts.append("\n".join(out) + "\n</section>")
-notebookHtml = "\n\n".join(notebookParts)
+def buildChapter(chapterFolder):
+  """chapters/<name>/<name>.md -> chapters/<name>/<name>.html, with its notebooks."""
+  name = os.path.basename(chapterFolder)
+  chapterFile = chapterFolder + "/" + name + ".md"
+  outputFile  = chapterFolder + "/" + name + ".html"
+  notebookFiles = [chapterFolder + "/code/" + n for n in notebookNames if os.path.exists(chapterFolder + "/code/" + n)]
 
-page = open(templateFile, encoding="utf-8").read()
-page = page.replace("{{title}}", html.escape(title))
-page = page.replace("{{toc}}", "\n".join(tocLines))
-page = page.replace("{{article}}", introHtml + "\n\n".join(articleParts))
-page = page.replace("{{notebook}}", notebookHtml)
-page = page.replace("<!-- Template for chapter pages. build.py fills the {{...}} slots from chapters/*.md -->\n", "")
-page = page.replace("<!doctype html>", "<!doctype html>\n<!-- Made by build.py from " + chapterFile + ". Edit that file, not this one. -->", 1)
+  # ---- read the Markdown and split it into blocks separated by blank lines ----
+  markdown = open(chapterFile, encoding="utf-8").read()
+  blocks   = [b.strip() for b in re.split(r"\n\s*\n", markdown) if b.strip() != ""]
 
-open(outputFile, "w", encoding="utf-8", newline="\n").write(page)
-print("wrote", outputFile, "from", chapterFile, "-", len(sections), "parts,",
-      sum(len(c) for c in cellsBySection.values()), "notebook cells")
+  title    = ""
+  intro    = []   # html pieces before the first ## heading
+  sections = []   # list of [heading, list of html pieces, big title shown above it]
+  bigTitle = ""   # a later "# " line: a big title before the next part
+
+  i = 0
+  while i < len(blocks):
+    block = blocks[i]
+    if block.startswith("# ") and title == "":
+      title = block[2:].strip()
+    elif block.startswith("# "):
+      bigTitle = block[2:].strip()
+    elif block.startswith("## "):
+      heading = block[3:].strip()
+      shortLabel = heading
+      if " | " in heading:
+        heading, shortLabel = [part.strip() for part in heading.split(" | ", 1)]
+      sections.append([heading, [], bigTitle, shortLabel])
+      bigTitle = ""
+    elif block.startswith("### "):
+      if len(sections) == 0:
+        intro.append("<h3>" + inline(block[4:].strip()) + "</h3>")
+      else:
+        sections[-1][1].append("<h3>" + inline(block[4:].strip()) + "</h3>")
+    else:
+      # where this block goes: the intro, or the current part
+      if len(sections) == 0:
+        pieces = intro
+      else:
+        pieces = sections[-1][1]
+
+      isImages = re.fullmatch(r"(\s*!\[.*?\]\(.*?\))+\s*", block)
+      isDemo   = re.fullmatch(r"\[demo:\s*(\w+)\]", block)
+      if isImages or isDemo:
+        # the next block is the caption if it starts with **Figure
+        caption = ""
+        if i + 1 < len(blocks) and blocks[i + 1].startswith("**Figure"):
+          caption = " ".join(blocks[i + 1].split("\n"))
+          i = i + 1
+        if isDemo:
+          pieces.append(demoHtml(isDemo.group(1), caption))
+        else:
+          pieces.append(figureHtml(block, caption, chapterFolder))
+      else:
+        pieces.append(blockHtml(block))
+    i = i + 1
+
+  # ---- build the table of contents and the article ----
+  tocLines     = []
+  articleParts = []
+  for number, (heading, pieces, bigTitle, shortLabel) in enumerate(sections):
+    sectionId = sectionIds[number]
+    tocLines.append('        <li><a href="#" data-section="' + sectionId + '">' + html.escape(shortLabel) + '</a></li>')
+    bigTitleHtml = ""
+    if bigTitle != "":
+      bigTitleHtml = '<h1 class="big-title">' + inline(bigTitle) + '</h1>\n'
+    articleParts.append(
+      bigTitleHtml
+      + '<section data-section="' + sectionId + '">\n'
+      + '<h2>' + html.escape(heading) + '</h2>\n'
+      + "\n".join(pieces) + "\n</section>")
+
+  introHtml = ""
+  if len(intro) > 0:
+    introHtml = '<div class="intro">\n' + "\n".join(intro) + "\n</div>\n\n"
+
+
+  cellsBySection = {}
+  for notebookFile in notebookFiles:
+    name = os.path.basename(notebookFile)
+    for cell in json.load(open(notebookFile, encoding="utf-8"))["cells"]:
+      sectionId = cell.get("metadata", {}).get("section")
+      if sectionId in sectionIds:
+        cellsBySection.setdefault(sectionId, []).append((name, cell))
+
+  notebookParts = []
+  for number, (heading, pieces, bigTitle, shortLabel) in enumerate(sections):
+    sectionId = sectionIds[number]
+    if sectionId not in cellsBySection:
+      continue
+    out = ['<section data-section="' + sectionId + '">',
+           '<div class="nb-part">' + "%02d" % (number + 1) + " · " + html.escape(shortLabel) + "</div>"]
+    shownFile = None
+    for name, cell in cellsBySection[sectionId]:
+      if name != shownFile:
+        out.append('<div class="nb-file">' + html.escape(name) + "</div>")
+        shownFile = name
+      out.append(cellHtml(cell))
+    notebookParts.append("\n".join(out) + "\n</section>")
+  notebookHtml = "\n\n".join(notebookParts)
+
+  page = open(templateFile, encoding="utf-8").read()
+  page = page.replace("{{title}}", html.escape(title))
+  page = page.replace("{{toc}}", "\n".join(tocLines))
+  page = page.replace("{{article}}", introHtml + "\n\n".join(articleParts))
+  page = page.replace("{{notebook}}", notebookHtml)
+  page = page.replace("<!-- Template for chapter pages. build.py fills the {{...}} slots from chapters/*.md -->\n", "")
+  page = page.replace("<!doctype html>", "<!doctype html>\n<!-- Made by build.py from " + chapterFile + ". Edit that file, not this one. -->", 1)
+
+  open(outputFile, "w", encoding="utf-8", newline="\n").write(page)
+  print("wrote", outputFile, "from", chapterFile, "-", len(sections), "parts,",
+        sum(len(c) for c in cellsBySection.values()), "notebook cells")
+
+
+# every folder in chapters/ that has its <name>.md
+for folder in sorted(os.listdir("chapters")):
+  if os.path.exists("chapters/" + folder + "/" + folder + ".md"):
+    buildChapter("chapters/" + folder)

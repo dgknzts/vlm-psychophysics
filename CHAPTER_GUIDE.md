@@ -15,6 +15,11 @@ this file is about the chapters' content: writing, figures, the experiment, and 
   lead ("**A much smaller crowding zone.** …"), one or two sentences each.
 - **Sound human-written.** No filler, no hype words, no "it is worth noting". Write a draft
   the user can rewrite in their own voice; tell them which parts are your drafts.
+- **Write like the user.** Their own text (crowding parts 01-02) is the model: plain
+  statements and definitions, technical terms in brackets ("surrounded by neighboring objects
+  (flankers)"). Avoid the AI patterns the user called out: rhetorical openers ("How faint can a
+  pattern be before…?"), colon set-ups ("It depends on two things: …"), "the X-er, the Y-er"
+  lines, and second-person storytelling.
 - **Never invent numbers.** Human results come from the papers, with citations. If a number
   cannot be found in a source you have read, give no number. Say so to the user.
 - **Correct wrong premises, with a source.** Example: the user thought flanker reports
@@ -60,6 +65,12 @@ this file is about the chapters' content: writing, figures, the experiment, and 
 - Pauses must land on something meaningful: an outline or a highlight during a pause has to
   point at what the caption is talking about.
 - Pale background (`ANIM_PALE`) so white pixels are visible.
+- **Keep the bottom free.** The video player's controls cover the bottom of the frame.
+  `save_video` adds an empty strip (`CONTROLS_PX`) under every frame; never draw there.
+- **Explain the code before using it.** If colour stands for a number, first show where the
+  number comes from on one example (e.g. one square: its numbers in two runs, their
+  difference, then its colour), and give the colour scale in words ("same in both runs" to
+  "very different"). Label every panel in plain words ("Gabor here", "no Gabor here").
 
 ## The experiment
 

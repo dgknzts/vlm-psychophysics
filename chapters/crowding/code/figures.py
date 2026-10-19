@@ -286,10 +286,20 @@ def _grab(fig):
 SPEED = 1.4      # the animations play this much faster than their frame times
 
 
+CONTROLS_PX = 100          # empty strip added under every frame: the video player's controls cover it
+
+
 def save_video(path, frames, durations, fps=25):
   """An MP4 from frames with their own display times (ms): each frame is repeated for as
-  long as it should stay on screen."""
+  long as it should stay on screen. Each frame gets an empty strip at the bottom, so the
+  player's controls never cover anything drawn."""
   import imageio_ffmpeg
+  from PIL import Image
+  def padded(frame):
+    out = Image.new("RGB", (frame.width, frame.height + CONTROLS_PX), ANIM_PALE)
+    out.paste(frame, (0, 0))
+    return out
+  frames = [padded(f) for f in frames]
   w, h = frames[0].size
   w2, h2 = w + w % 2, h + h % 2          # the video format needs even sizes
   writer = imageio_ffmpeg.write_frames(str(path), (w2, h2), fps=fps, codec="libx264", pix_fmt_out="yuv420p",
