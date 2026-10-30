@@ -224,13 +224,69 @@ def csf_compare_figure(path, thresholds):
   ax.vlines(t.frequency, 1 / t.threshold, 1 / t.below, color=RED, lw=4, alpha=0.3)
   ax.plot(t.frequency, 1 / t.threshold, "o-", color=RED, ms=4.5, lw=1.3, label="Qwen3-VL-2B")
   ax.axhline(127, color=SOFT, lw=0.8, ls=(0, (4, 3)))
-  ax.text(1.05, 140, "8-bit limit", fontsize=8, color=SOFT)
+  ax.text(9.6, 118, "8-bit limit", fontsize=8, color=SOFT, va="top")
   ax.set_xscale("log"); ax.set_yscale("log")
   ax.set_xticks([1, 2, 4, 8, 16, 30]); ax.set_xticklabels(["1", "2", "4", "8", "16", "30"])
   ax.set_yticks([1, 10, 100, 1000]); ax.set_yticklabels(["1", "10", "100", "1000"])
   ax.set_xlabel("spatial frequency (c/deg)")
   ax.set_ylabel("contrast sensitivity (1 / threshold)")
   ax.legend(fontsize=8, loc="lower left")
+  fig.savefig(path, dpi=200, bbox_inches="tight")
+  plt.close(fig)
+
+
+LEANS = {"no image": 1.40, "grey image, no Gabor": 1.18, 'grey image, no Gabor,\nasked "right or left?"': -0.31}
+# the model's score for "left" over "right" (log-odds), printed by run_layers.ipynb (last cell)
+
+
+def left_habit_figure(path, results, faint=0.001):
+  """How often the model would say "left" (out of left and right): with no image, with a grey
+  image, with the two words swapped in the question, and in the main run for faint Gabors
+  (contrast up to 0.1%) on either side. The dashed line is 50%, no preference."""
+  low = results[results.contrast <= faint + 1e-9]
+  bars = [(k, 1 / (1 + np.exp(-v))) for k, v in LEANS.items()]
+  bars += [("Gabor on the left, 0.1% or fainter", (1 / (1 + np.exp(-low.score_left))).mean()),
+           ("Gabor on the right, 0.1% or fainter", (1 / (1 + np.exp(-low.score_right))).mean())]
+  fig, ax = plt.subplots(figsize=(5.6, 2.9))
+  y = np.arange(len(bars))[::-1]
+  for yi, (label, p) in zip(y, bars):
+    ax.barh(yi, p, height=0.6, color=RED if "Gabor on" in label else SOFT)
+    ax.text(p + 0.015, yi, "%d%%" % round(100 * p), va="center", fontsize=8.5, zorder=3,
+            bbox=dict(fc="white", ec="none", pad=1))
+  ax.axvline(0.5, color=INK, lw=0.8, ls=(0, (3, 3)))
+  ax.set_yticks(y); ax.set_yticklabels([b[0] for b in bars], fontsize=8.5)
+  ax.set_xlim(0, 1); ax.set_xticks([0, 0.5, 1]); ax.set_xticklabels(["0", "50%", "100%"])
+  ax.set_xlabel('says "left"')
+  ax.spines["left"].set_visible(False); ax.tick_params(axis="y", length=0)
+  fig.savefig(path, dpi=200, bbox_inches="tight")
+  plt.close(fig)
+
+
+def readout_figure(path, readout):
+  """Figure 6f: proportion correct of the read-out at every layer (grey, one line per layer)
+  and of the model's own answer (red), against contrast, for 4 and 16 c/deg. Language layer 0
+  is left out: at the answer's place it holds only the word, before any image reaches it."""
+  fig, axs = plt.subplots(1, 2, figsize=(7.2, 3.0), sharey=True)
+  for ax, f in zip(axs, [4, 16]):
+    d = readout[readout.frequency == f]
+    for layer, g in d.groupby("layer"):
+      if layer in ("answer", "language 0"):
+        continue
+      g = g.sort_values("contrast")
+      ax.plot(g.contrast * 100, g.correct, color=SOFT, lw=0.6, alpha=0.5)
+    g = d[d.layer == "answer"].sort_values("contrast")
+    ax.plot(g.contrast * 100, g.correct, "o-", color=RED, ms=3.5, lw=1.3)
+    ax.axhline(0.5, color=INK, lw=0.7, ls=(0, (3, 3)))
+    ax.set_xscale("log")
+    ax.set_xticks([1e-4, 1e-3, 1e-2, 1e-1, 1, 10])
+    ax.set_xticklabels(["0.0001", "0.001", "0.01", "0.1", "1", "10"], fontsize=8)
+    ax.set_xlabel("contrast (%)")
+    ax.set_title("%d c/deg" % f, fontsize=9.5)
+    ax.text(1.5e-4, 1.04, "read-out, every layer", fontsize=8, color=SOFT)
+    ax.text(1.5e-4, 0.33, "the model's answer", fontsize=8, color=RED)
+  axs[0].set_ylabel("correct")
+  axs[0].set_ylim(0.2, 1.1)
+  axs[0].set_yticks([0.25, 0.5, 0.75, 1]); axs[0].set_yticklabels(["25%", "50%", "75%", "100%"])
   fig.savefig(path, dpi=200, bbox_inches="tight")
   plt.close(fig)
 
@@ -385,60 +441,12 @@ def fade_animation():
   return frames, durations
 
 
-def answer_animation():
-  """The model's answer as the stripes get stronger: its chance of saying "left" (among left
-  and right) for the Gabor on the left and on the right, and with no Gabor."""
-  z = _internals()
-  series, pl, pr = z["series"], _p_left(z["score_left"]), _p_left(z["score_right"])
-  pb = float(_p_left(z["score_blank"]))
-  frames, durations = [], []
-  X0, X1 = 2.4, 10.6
-  idx = np.arange(len(series))
-
-  def frame(caption, k, show=(True, True)):
-    fig, ax = _frame((6.4, 3.4))
-    ax.set_xlim(0, 12); ax.set_ylim(0, 6.2); ax.axis("off")
-    ax.text(6, 5.65, caption, ha="center", fontsize=9.5)
-    c = np.exp(np.interp(k, idx, np.log(series)))
-    left, right = np.interp(k, idx, pl), np.interp(k, idx, pr)
-    ax.text(6, 4.85, "contrast %.3g%%" % (100 * c), ha="center", fontsize=10.5, color=RED)
-    for y, p, label, on in [(3.4, left, "Gabor on the left", show[0]), (2.0, right, "Gabor on the right", show[1])]:
-      ax.text(X0 - 0.2, y + 0.25, label, ha="right", va="center", fontsize=8.5, alpha=1 if on else 0.3)
-      ax.add_patch(plt.Rectangle((X0, y), X1 - X0, 0.5, fc="white", ec=SOFT, lw=0.6))
-      if on:
-        ax.add_patch(plt.Rectangle((X0, y), (X1 - X0) * p, 0.5, fc=RED, ec="none", alpha=0.85))
-        ax.text(X0 + (X1 - X0) * p + 0.1, y + 0.25, "%.0f%%" % (100 * p), va="center", fontsize=8.5)
-    xb = X0 + (X1 - X0) * pb
-    ax.plot([xb, xb], [1.7, 4.2], color=INK, lw=1, ls=(0, (3, 2)))
-    ax.text(xb, 1.25, "no Gabor: %.0f%%" % (100 * pb), ha="center", fontsize=8, color=SOFT)
-    ax.text(X0, 0.55, "0%", fontsize=8, color=SOFT)
-    ax.text(X1, 0.55, "100% \"left\"", fontsize=8, color=SOFT, ha="right")
-    frames.append(_grab(fig))
-
-  frame("How often the model would say \"left\" (out of left and right)", 0, (False, False)); durations.append(3000)
-  frame("With no stripes it already says \"left\" %.0f%% of the time: its lean" % (100 * pb), 0, (False, False))
-  durations.append(3000)
-  n = len(series) - 1
-  for k in np.linspace(0, n, 12 * n + 1):
-    c = np.exp(np.interp(k, idx, np.log(series)))
-    left, right = np.interp(k, idx, pl), np.interp(k, idx, pr)
-    caption = ("Faint stripes: almost no change" if abs(left - right) < 0.005 else
-               "Here the stripes push the answer the wrong way" if left < right else
-               "Stronger stripes: the answer follows them")
-    frame(caption, k); durations.append(110)
-    if min(abs(k - 4), abs(k - 5), abs(k - 8)) < 1e-9:
-      durations[-1] = 2600
-  durations[-1] = 4000
-  return frames, durations
-
-
 def tutorial_animations(img_dir):
   img_dir = Path(img_dir)
   save_video(img_dir / "vlm_travel_fade.mp4", *fade_animation())
   save_video(img_dir / "vlm_square.mp4", *square_animation())
   save_video(img_dir / "vlm_layers_vision.mp4", *layers_animation("vision"))
   save_video(img_dir / "vlm_layers_language.mp4", *layers_animation("language"))
-  save_video(img_dir / "vlm_answer.mp4", *answer_animation())
 
 
 
